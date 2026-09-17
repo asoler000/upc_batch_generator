@@ -590,6 +590,17 @@
                hint: rows.length + ' loose match(es) — not added automatically. Put the exact model number in the box on its own.' };
     });
 
+    /* Automatically stage every unambiguous match for generation.
+       addToSavedLocal already prevents duplicates, so re-running a lookup is safe. */
+    var autoAdded = 0;
+    lookupResults.forEach(function (r) {
+      if (r.row && addToSavedLocal(r.row)) autoAdded++;
+    });
+    if (autoAdded) {
+      renderSaved();
+      await saveSavedRows();
+    }
+
     renderLookupResults();
 
     var found = lookupResults.filter(function (r) { return r.row; }).length;
@@ -601,6 +612,7 @@
       found + ' found, ' + missing + ' not in the master list';
     if (ambiguous) html += ', ' + ambiguous + ' needing a decision';
     html += '.';
+    if (autoAdded) html += ' <strong>' + autoAdded + ' ready to generate.</strong>';
     if (!found && !masterRows.length) html += ' Upload the master CSV to perform lookups.';
     $('lookupStatus').innerHTML = html;
   }
@@ -1202,8 +1214,12 @@
     $('addFoundBtn').addEventListener('click', addAllFound);
     $('pasteInput').addEventListener('input', updatePasteCount);
     $('pasteInput').addEventListener('paste', function () {
-      /* the paste lands after this event, so read the count on the next tick */
-      setTimeout(updatePasteCount, 0);
+      /* The paste lands after this event. Once it is in the box, immediately
+         look up the pasted model numbers so there is no separate Lookup step. */
+      setTimeout(function () {
+        updatePasteCount();
+        lookupPasted();
+      }, 0);
     });
     $('pasteInput').addEventListener('keydown', function (event) {
       /* Ctrl / Cmd + Enter runs the lookup; plain Enter adds a newline so a

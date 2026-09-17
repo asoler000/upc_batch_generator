@@ -168,6 +168,21 @@ footer a{color:#111;text-decoration:none;font-weight:700}
   .output-buttons button{flex:1 1 100%}
 }
 </style>
+  <style>
+    /* Streamlined generation controls: only the main UPC action is blue. */
+    #generateBtn.primary-generate {
+      background: #1677ff;
+      border-color: #1677ff;
+      color: #fff;
+    }
+    #generateBtn.primary-generate:hover {
+      background: #0f68e8;
+      border-color: #0f68e8;
+    }
+    .primary-actions {
+      margin-top: 12px;
+    }
+  </style>
 </head>
 <body>
 <div class="app">
@@ -193,7 +208,7 @@ footer a{color:#111;text-decoration:none;font-weight:700}
     <p class="small">
       Upload the Monday master CSV once and it stays inside this browser. Then paste model numbers to
       find their UPCs &mdash; <strong>one model number or a whole column, same box.</strong>
-      <strong>Nothing is generated until you add rows to the export list below.</strong>
+      Pasted matches are automatically added to the generator below.
     </p>
 
     <div class="row">
@@ -208,12 +223,12 @@ footer a{color:#111;text-decoration:none;font-weight:700}
       placeholder="One model number, or paste the whole column straight from Excel:&#10;HB-2200&#10;&#10;Commas, tabs, semicolons and quoted Excel cells all work.&#10;Every pasted value is checked against the master list above.&#10;Pasting only looks numbers up &mdash; it never generates files."></textarea>
     <div class="paste-hint">
       <span class="tiny" id="pasteCount">Nothing pasted yet.</span>
-      <span class="tiny">Ctrl / Cmd + Enter to look up</span>
+      <span class="tiny">Paste automatically looks up and stages matches</span>
     </div>
     <div class="row" style="margin-top:10px">
-      <button class="magic" id="lookupBtn">Find UPCs</button>
+      <button class="secondary" id="lookupBtn">Refresh Lookup</button>
       <button class="secondary" id="clearPasteBtn">Clear Box</button>
-      <button class="good" id="addFoundBtn" disabled>Add All Found to Export List</button>
+      <button class="secondary" id="addFoundBtn" disabled>Add All Found to Export List</button>
     </div>
 
     <div class="status" id="lookupStatus">Ready. Type one model number or paste a whole column.</div>
@@ -231,7 +246,7 @@ footer a{color:#111;text-decoration:none;font-weight:700}
           </tr>
         </thead>
         <tbody id="lookupBody">
-          <tr><td colspan="6" class="small">Paste model numbers above, then press Find UPCs.</td></tr>
+          <tr><td colspan="6" class="small">Paste model numbers above. Matches appear automatically.</td></tr>
         </tbody>
       </table>
     </div>
@@ -277,6 +292,18 @@ footer a{color:#111;text-decoration:none;font-weight:700}
         </tbody>
       </table>
     </div>
+
+    <div class="output-buttons primary-actions">
+      <button class="primary-generate" id="generateBtn">Generate UPCs only (SVG + PDF, named MODEL_UPC)</button>
+      <button class="secondary" id="qrBtn">Generate 2D GS1 Digital Link Codes only (QR)</button>
+      <button class="secondary" id="mergedPdfBtn">Download Merged PDF (all rows)</button>
+      <button class="secondary" id="printSheetBtn">Download Print Sheet (actual size)</button>
+      <button class="secondary" id="csvBtn">Download Export CSV</button>
+      <button class="secondary" id="specCsvBtn">Download Spec Sheet CSV</button>
+      <button class="secondary" id="clearSavedBtn">Clear Export List</button>
+    </div>
+
+    <p class="tiny" style="margin:8px 0 0">Choose an action above. Generation options are directly below.</p>
 
     <!-- ---- output settings ---- -->
     <h3>Output Settings</h3>
@@ -397,15 +424,7 @@ footer a{color:#111;text-decoration:none;font-weight:700}
 
     <div class="warnbox" id="specWarn"></div>
 
-    <div class="output-buttons">
-      <button id="generateBtn">Generate UPCs only (SVG + PDF, named MODEL_UPC)</button>
-      <button class="accent" id="qrBtn">Generate 2D GS1 Digital Link Codes only (QR)</button>
-      <button id="mergedPdfBtn">Download Merged PDF (all rows)</button>
-      <button id="printSheetBtn">Download Print Sheet (actual size)</button>
-      <button class="secondary" id="csvBtn">Download Export CSV</button>
-      <button class="secondary" id="specCsvBtn">Download Spec Sheet CSV</button>
-      <button class="danger" id="clearSavedBtn">Clear Export List</button>
-    </div>
+
 
     <p class="tiny" id="outputNamingNote" style="margin:10px 0 0">
       <strong>Every file is named <span class="code-cell">MODELNUMBER_UPCNUMBER</span></strong> — for example
