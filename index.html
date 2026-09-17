@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Life Works UPC Tool — Lookup, Generate &amp; Export</title>
+<style>
+:root{
+  --black:#101010;
+  --gray:#f5f5f3;
+  --mid:#777;
+  --line:#e7e7e2;
+  --green:#0f7b3a;
+  --red:#b42318;
+  --amber:#b45309;
+  --amber-bg:#fff7e6;
+  --amber-line:#ffd591;
+  --blue:#1d4ed8;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family: Arial, Helvetica, sans-serif;
+  background:var(--gray);
+  color:var(--black);
+}
+.app{
+  width:min(1240px, calc(100% - 28px));
+  margin:22px auto;
+  background:#fff;
+  border-radius:18px;
+  box-shadow:0 8px 30px rgba(0,0,0,.08);
+  overflow:hidden;
+}
+header{
+  padding:24px 30px;
+  border-bottom:1px solid #222;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:20px;
+  background:#000;
+}
+.brand{display:flex;align-items:center;gap:18px}
+.brand img{height:42px;max-width:190px;object-fit:contain}
+.brand-text h1{font-size:24px;margin:0 0 4px;letter-spacing:.2px;color:#fff}
+.brand-text p{margin:0;color:#d7d7d7;font-size:13px}
+.pill{
+  display:inline-block;padding:6px 12px;border-radius:999px;
+  background:#222;color:#fff;border:1px solid #444;font-size:12px;white-space:nowrap;
+}
+.pill.loaded{background:#0f7b3a;border-color:#0f7b3a}
+main{padding:26px 30px 22px}
+.card{
+  border:1px solid var(--line);border-radius:14px;padding:18px;background:#fff;margin-bottom:20px;
+}
+.card h2{font-size:18px;margin:0 0 10px}
+.card h3{font-size:14px;margin:16px 0 8px;text-transform:uppercase;letter-spacing:.05em;color:var(--mid)}
+.monday-reminder{
+  display:none;margin:0 0 18px;padding:14px 16px;border-radius:12px;
+  background:var(--amber-bg);border:1px solid var(--amber-line);color:#7a4b00;
+  font-size:14px;line-height:1.4;
+}
+.monday-reminder strong{color:#3b2600}
+.small{color:var(--mid);font-size:13px;line-height:1.45}
+.tiny{color:var(--mid);font-size:11px;line-height:1.4}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.row.tight{gap:6px}
+input[type="file"],input[type="text"],input[type="number"],select{
+  padding:12px 13px;border:1px solid #cfcfc9;border-radius:10px;font-size:14px;background:#fff;font-family:inherit;
+}
+input[type="text"]{width:100%}
+input[type="number"]{width:120px}
+select{font-size:13px;padding:10px 11px}
+button{
+  border:0;border-radius:10px;padding:11px 14px;background:#111;color:#fff;
+  cursor:pointer;font-size:14px;font-family:inherit;
+}
+button.secondary{background:#efefeb;color:#111}
+button.danger{background:#fff1f0;color:var(--red);border:1px solid #ffd1cc}
+button.good{background:#e9f7ef;color:var(--green);border:1px solid #bfebd0}
+button.accent{background:var(--blue);color:#fff}
+button:hover{opacity:.88}
+button:disabled{opacity:.4;cursor:not-allowed}
+.status{margin-top:10px;font-size:13px;color:var(--mid);line-height:1.5}
+.status strong{color:#111}
+.status.goodtext{color:var(--green)}
+.status.errortext{color:var(--red)}
+.searchbar{margin:18px 0 10px;display:grid;grid-template-columns:1fr auto;gap:10px}
+textarea{
+  width:100%;min-height:130px;padding:12px 13px;border:1px solid #cfcfc9;border-radius:10px;
+  font-size:14px;font-family:"Courier New",Courier,monospace;line-height:1.6;resize:vertical;
+  background:#fff;color:var(--black);
+}
+textarea:focus{outline:2px solid #111;outline-offset:1px}
+.paste-hint{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:8px}
+.badge.found{background:#e9f7ef;color:var(--green);border-color:#bfebd0}
+.badge.missing{background:#fff1f0;color:var(--red);border-color:#ffd1cc}
+.badge.alt{background:#eef2ff;color:var(--blue);border-color:#c7d2fe}
+.table-wrap{
+  overflow:auto;border:1px solid var(--line);border-radius:12px;margin-top:14px;max-height:330px;
+}
+.builder-wrap{
+  overflow:auto;border:1px solid var(--line);border-radius:12px;margin-top:14px;max-height:640px;min-height:180px;
+}
+table{border-collapse:collapse;width:100%;min-width:720px;background:#fff}
+th,td{
+  padding:11px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle;font-size:13px;
+}
+th{
+  position:sticky;top:0;background:#fafaf8;z-index:2;font-size:12px;
+  text-transform:uppercase;letter-spacing:.04em;
+}
+td.actions{width:110px}
+.manual-grid{display:grid;grid-template-columns:1fr 1.5fr 1fr auto;gap:10px;margin-top:12px}
+.export-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.settings-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-top:6px;
+}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#333}
+.check{display:flex;align-items:center;gap:8px;font-size:13px;color:#222}
+.check input{width:16px;height:16px}
+.badge{
+  display:inline-block;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:700;
+  white-space:nowrap;border:1px solid transparent;
+}
+.badge.ok{background:#e9f7ef;color:var(--green);border-color:#bfebd0}
+.badge.fixed{background:var(--amber-bg);color:var(--amber);border-color:var(--amber-line)}
+.badge.err{background:#fff1f0;color:var(--red);border-color:#ffd1cc}
+.badge.sym{background:#eef2ff;color:var(--blue);border-color:#c7d2fe}
+.code-cell{font-family:"Courier New",Courier,monospace;font-size:13px;letter-spacing:.04em;white-space:nowrap}
+.preview-cell{width:150px}
+.preview-cell svg{display:block;max-width:100%;height:auto;max-height:56px;width:auto}
+.preview-cell .no-prev{font-size:11px;color:var(--red)}
+.spec-note{font-size:11px;color:var(--mid);margin-top:3px;line-height:1.35}
+.spec-note.warn{color:var(--amber)}
+.spec-note.err{color:var(--red)}
+.output-buttons{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.output-buttons button{flex:0 1 auto}
+.magic{background:#111;color:#fff}
+.hint{
+  margin-top:12px;padding:12px 14px;border-radius:10px;background:#f8f8f6;
+  border:1px dashed #d8d8d2;font-size:12px;color:#444;line-height:1.55;
+}
+footer{
+  padding:18px 32px;border-top:1px solid var(--line);color:var(--mid);font-size:13px;text-align:center;
+}
+footer a{color:#111;text-decoration:none;font-weight:700}
+.warnbox{
+  display:none;margin:12px 0 0;padding:12px 14px;border-radius:10px;
+  background:#fff1f0;border:1px solid #ffd1cc;color:var(--red);font-size:12px;line-height:1.5;
+}
+@media(max-width:800px){
+  .app{width:calc(100% - 16px);margin:8px auto;border-radius:12px}
+  header{padding:20px;align-items:flex-start;flex-direction:column}
+  .brand{align-items:flex-start;flex-direction:column;gap:12px}
+  .brand-text h1{font-size:21px}
+  main{padding:18px}
+  .searchbar{grid-template-columns:1fr}
+  .manual-grid{grid-template-columns:1fr}
+  button{width:100%}
+  input[type="file"]{width:100%}
+  input[type="number"]{width:100%}
+  .row{align-items:stretch}
+  .table-wrap,.builder-wrap{max-height:380px}
+  table{min-width:680px}
+  .output-buttons button{flex:1 1 100%}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <div class="brand">
+    <img src="https://cdn.prod.website-files.com/612362edc9d56ba2e558c072/612649fc2fd1bd63a646088d_Group%201807.svg" alt="Life Works logo" />
+    <div class="brand-text">
+      <h1>Life Works Technology Group</h1>
+      <p>UPC Lookup &rarr; Vector Barcode Generator &rarr; Export List</p>
+    </div>
+  </div>
+  <span class="pill" id="masterCount">No master list loaded</span>
+</header>
+
+<main>
+  <div class="monday-reminder" id="mondayReminder">
+    <strong>Weekly file reminder:</strong> Your master CSV may be outdated. Please upload this week&rsquo;s newest master CSV before proceeding.
+  </div>
+
+  <!-- ============ 1. MASTER + UPC LOOKUP ============ -->
+  <section class="card" id="master-section">
+    <h2>1. Upload Master CSV + Find UPCs</h2>
+    <p class="small">
+      Upload the Monday master CSV once and it stays inside this browser. Then paste model numbers to
+      find their UPCs &mdash; <strong>one model number or a whole column, same box.</strong>
+      <strong>Nothing is generated until you add rows to the export list below.</strong>
+    </p>
+
+    <div class="row">
+      <input type="file" id="csvFile" accept=".csv" title="Select and upload master CSV" />
+      <button class="danger" id="deleteMasterBtn">Delete Master List</button>
+    </div>
+    <div class="status" id="uploadStatus">Ready. Select a master CSV file to automatically upload and replace the current one.</div>
+
+    <h3 style="margin-bottom:6px">Paste model numbers &mdash; one, or a whole column</h3>
+    <textarea id="pasteInput" spellcheck="false"
+      aria-label="Paste model numbers, one or many"
+      placeholder="One model number, or paste the whole column straight from Excel:&#10;HB-2200&#10;&#10;Commas, tabs, semicolons and quoted Excel cells all work.&#10;Every pasted value is checked against the master list above.&#10;Pasting only looks numbers up &mdash; it never generates files."></textarea>
+    <div class="paste-hint">
+      <span class="tiny" id="pasteCount">Nothing pasted yet.</span>
+      <span class="tiny">Ctrl / Cmd + Enter to look up</span>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <button class="magic" id="lookupBtn">Find UPCs</button>
+      <button class="secondary" id="clearPasteBtn">Clear Box</button>
+      <button class="good" id="addFoundBtn" disabled>Add All Found to Export List</button>
+    </div>
+
+    <div class="status" id="lookupStatus">Ready. Type one model number or paste a whole column.</div>
+
+    <div class="table-wrap" id="lookupWrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Model Number (as pasted)</th>
+            <th>Status</th>
+            <th>Item / Model</th>
+            <th>Description</th>
+            <th>GTIN &mdash; Single Pack UPC</th>
+            <th>Add</th>
+          </tr>
+        </thead>
+        <tbody id="lookupBody">
+          <tr><td colspan="6" class="small">Paste model numbers above, then press Find UPCs.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ 2. EXPORT LIST + GENERATE ============ -->
+  <section class="card" id="export-section">
+    <div class="export-head">
+      <div>
+        <h2>2. Your Export List &amp; UPC Generator</h2>
+        <p class="small">
+          Add rows from the lookup box, or type a model + UPC by hand. Every row is validated and previewed live.
+          Then generate what you need: <strong>Generate UPCs only</strong> for the linear barcode files, or
+          <strong>Generate 2D GS1 Digital Link Codes only</strong> for the QR files. Each file is named
+          <span class="code-cell">MODELNUMBER_UPC</span>.
+        </p>
+      </div>
+      <div class="status" id="savedStatus">Saved rows: 0</div>
+    </div>
+
+    <div class="manual-grid">
+      <input type="text" id="manualItem" placeholder="Item / model number" />
+      <input type="text" id="manualDesc" placeholder="Description" />
+      <input type="text" id="manualUpc" placeholder="GTIN - Single Pack UPC" />
+      <button class="good" id="manualAddBtn">Add Row</button>
+    </div>
+
+    <div class="builder-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="preview-cell">Live Preview</th>
+            <th>Item / Model</th>
+            <th>Description</th>
+            <th>GTIN - Single Pack UPC</th>
+            <th>Symbology</th>
+            <th>Check</th>
+            <th>Remove</th>
+          </tr>
+        </thead>
+        <tbody id="savedBody">
+          <tr><td colspan="7" class="small">Your export list is empty.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ---- output settings ---- -->
+    <h3>Output Settings</h3>
+    <div class="settings-grid">
+      <div class="field">
+        <label for="symPref">Symbology</label>
+        <select id="symPref">
+          <option value="Auto" selected>Auto (recommended)</option>
+          <option value="UPC-A">UPC-A &mdash; 12 digits (US retail)</option>
+          <option value="EAN-13">EAN-13 &mdash; 13 digits</option>
+          <option value="EAN-8">EAN-8 &mdash; 8 digits (small packs)</option>
+          <option value="ITF-14">ITF-14 &mdash; 14 digits (cartons / cases)</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="xDimSelect">X-dimension / size</label>
+        <select id="xDimSelect">
+          <option value="0.0130" selected>0.0130 in / 0.330 mm &mdash; 100% (recommended retail)</option>
+          <option value="0.0104">0.0104 in / 0.264 mm &mdash; 80% (smallest GS1 allows)</option>
+          <option value="0.0117">0.0117 in / 0.297 mm &mdash; 90%</option>
+          <option value="0.0143">0.0143 in / 0.363 mm &mdash; 110%</option>
+          <option value="0.0156">0.0156 in / 0.396 mm &mdash; 120%</option>
+          <option value="0.0169">0.0169 in / 0.429 mm &mdash; 130%</option>
+          <option value="0.0182">0.0182 in / 0.462 mm &mdash; 140%</option>
+          <option value="0.0195">0.0195 in / 0.495 mm &mdash; 150%</option>
+          <option value="0.0250">0.0250 in / 0.635 mm &mdash; carton</option>
+          <option value="0.0394">0.0394 in / 1.016 mm &mdash; ITF-14 nominal</option>
+          <option value="custom">Custom&hellip;</option>
+        </select>
+        <div class="row tight" id="customXWrap" style="display:none">
+          <input type="number" id="xDimCustom" step="0.0001" min="0.005" max="0.10" value="0.0130" aria-label="Custom X-dimension in inches" />
+          <span class="tiny">inches per narrow bar</span>
+        </div>
+        <details class="tiny" style="margin-top:4px">
+          <summary style="cursor:pointer">Standard size chart (GS1)</summary>
+          <table style="min-width:0;width:100%;margin-top:8px">
+            <thead><tr><th style="position:static">Symbol</th><th style="position:static">X-dim range</th><th style="position:static">Bar height</th><th style="position:static">Width @ 100%</th></tr></thead>
+            <tbody>
+              <tr><td>UPC-A</td><td>0.264&ndash;0.660 mm</td><td>0.8996 in (22.85 mm)</td><td>1.469 in</td></tr>
+              <tr><td>EAN-13</td><td>0.264&ndash;0.660 mm</td><td>0.8996 in (22.85 mm)</td><td>1.469 in</td></tr>
+              <tr><td>EAN-8</td><td>0.264&ndash;0.660 mm</td><td>0.7240 in (18.39 mm)</td><td>1.053 in</td></tr>
+              <tr><td>ITF-14</td><td>0.495&ndash;1.016 mm</td><td>1.2598 in (32 mm)</td><td>135 &times; X</td></tr>
+            </tbody>
+          </table>
+        </details>
+      </div>
+
+      <div class="field">
+        <label for="barHeight">Bar height</label>
+        <select id="barHeight">
+          <option value="auto" selected>Auto &mdash; GS1 standard for this size</option>
+          <option value="0.50">0.50 in</option>
+          <option value="0.75">0.75 in (19.1 mm)</option>
+          <option value="0.8996">0.8996 in (22.85 mm, 100%)</option>
+          <option value="1.00">1.00 in (25.4 mm, GS1 retail minimum)</option>
+          <option value="1.25">1.25 in (31.8 mm)</option>
+          <option value="1.2598">1.2598 in (32 mm, GS1 carton minimum)</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Options</label>
+        <label class="check"><input type="checkbox" id="optText" checked /> Show human-readable digits</label>
+        <label class="check"><input type="checkbox" id="optCaption" checked /> Add model + description caption line</label>
+        <label class="check"><input type="checkbox" id="optBearer" checked /> ITF-14 bearer bars</label>
+        <label class="check"><input type="checkbox" id="optFix" checked /> Auto-fix wrong check digits</label>
+      </div>
+
+      <div class="field">
+        <label>Batch output files</label>
+        <label class="check"><input type="checkbox" id="outSvg" checked /> SVG per item (vector, opens in Illustrator)</label>
+        <label class="check"><input type="checkbox" id="outPdf" checked /> PDF per item (true physical size)</label>
+        <label class="check"><input type="checkbox" id="outPng"> PNG per item (300 dpi raster)</label>
+      </div>
+
+      <div class="field">
+        <label for="qrEcc">2D code &mdash; GS1 Digital Link (QR)</label>
+        <select id="qrEcc">
+          <option value="M" selected>Error correction M (~15%, recommended for packaging)</option>
+          <option value="L">Error correction L (~7%, smallest symbol)</option>
+          <option value="Q">Error correction Q (~25%)</option>
+          <option value="H">Error correction H (~30%, survives scuffing)</option>
+        </select>
+        <div class="row tight" style="margin-top:2px">
+          <label class="tiny" for="qrModuleSize" style="min-width:118px">QR module size (px)</label>
+          <input type="number" id="qrModuleSize" min="4" max="40" step="1" value="8"
+                 aria-label="QR module size in pixels" style="width:80px" />
+        </div>
+        <div class="row tight" style="margin-top:6px">
+          <label class="tiny" for="qrWidth" style="min-width:118px">Will it scan? Width I have</label>
+          <input type="number" id="qrWidth" step="0.01" min="0.05" value="1.00"
+                 aria-label="Available width for the QR code" style="width:80px" />
+          <select id="qrUnit" aria-label="Width unit" style="width:auto;padding:8px 10px">
+            <option value="in" selected>inches</option>
+            <option value="mm">mm</option>
+          </select>
+        </div>
+        <div class="spec-note" id="qrSizeOut" aria-live="polite">Enter the width you have available to check it.</div>
+        <label class="check"><input type="checkbox" id="optQrBatch" /> Include batch / lot as AI (10)</label>
+        <input type="text" id="qrBatch" placeholder="Batch or lot number, e.g. LOT2026A" style="font-size:13px" />
+        <label class="check"><input type="checkbox" id="optQrExpiry" /> Include expiry / best-before as AI (17)</label>
+        <input type="text" id="qrExpiry" placeholder="Expiry as YYMMDD, e.g. 270630" style="font-size:13px" />
+        <p class="tiny" style="margin:0">
+          The QR encodes <span class="mono">https://id.gs1.org/01/&lt;GTIN-14&gt;</span> &mdash; the GTIN you
+          already have, expressed as a web link, so a phone camera opens it with no app. It is a
+          <strong>second, separate</strong> deliverable and never replaces the UPC.<br>
+          <strong>QR module size</strong> is just how many pixels each square is drawn at in the
+          exported file; the 4-module quiet zone is what has to survive printing, so never crop the
+          white border.<br>
+          <strong>"Will it scan?"</strong> is the one that matters for print. Give it the width you
+          actually have on the panel and it tells you the physical size of one square &mdash; the
+          number that decides whether a customer's phone can read it. A code can look perfect in
+          Illustrator and still be unreadable.
+        </p>
+      </div>
+    </div>
+
+    <div class="warnbox" id="specWarn"></div>
+
+    <div class="output-buttons">
+      <button id="generateBtn">Generate UPCs only (SVG + PDF, named MODEL_UPC)</button>
+      <button class="accent" id="qrBtn">Generate 2D GS1 Digital Link Codes only (QR)</button>
+      <button id="mergedPdfBtn">Download Merged PDF (all rows)</button>
+      <button id="printSheetBtn">Download Print Sheet (actual size)</button>
+      <button class="secondary" id="csvBtn">Download Export CSV</button>
+      <button class="secondary" id="specCsvBtn">Download Spec Sheet CSV</button>
+      <button class="danger" id="clearSavedBtn">Clear Export List</button>
+    </div>
+
+    <p class="tiny" id="outputNamingNote" style="margin:10px 0 0">
+      <strong>Every file is named <span class="code-cell">MODELNUMBER_UPCNUMBER</span></strong> — for example
+      <span class="code-cell">MODEL-1001_012345678905.svg</span>. The 2D files append
+      <span class="code-cell">_GS1-DIGITAL-LINK</span> so the two kinds can never be confused.
+      Each ZIP also carries a <span class="code-cell">00_README.txt</span> listing every code, its
+      symbology and its exact printed size.
+    </p>
+
+    <div class="status" id="outputStatus"></div>
+
+    <div class="hint" id="gs1Hint">
+      <strong>What is a &ldquo;2D GS1 Digital Link code&rdquo;?</strong>
+      A <strong>QR code</strong> is the shape (a grid of squares, so it holds far more than bars).
+      <strong>2D</strong> just means data in two directions, unlike a one-line UPC. And
+      <strong>GS1 Digital Link</strong> is the rulebook for what goes inside it: your
+      <em>same existing GTIN</em>, written as a web address &mdash;
+      <span class="code-cell">https://id.gs1.org/01/00012345678905</span> &mdash; so a phone camera can
+      open it with no app. One number, a second alphabet.<br>
+      <strong>Which code do I actually need?</strong>
+      The <strong>UPC</strong> is what a retail checkout scanner reads today and is still required on
+      packaging. The <strong>2D code</strong> is the additional code heading for retail point-of-sale
+      over the coming years: the same GTIN carried as a link so a phone can open it. Retailers adopting
+      it upgrade their scanners; that is their change, not yours. Keep both on the artwork. A 2D code is
+      <em>additive</em>, never a substitute, and the two are generated as separate downloads so neither
+      can be placed by mistake.<br>
+      <strong>Why bother?</strong> A UPC's 12 digits can only identify the product. A Digital Link can
+      also carry batch and expiry inside the code, and can lead your customer somewhere useful &mdash;
+      that is the difference between a compliance mark and something that sells.
+    </div>
+
+    <div class="hint" id="aiHint">
+      <strong>Illustrator note:</strong> browsers cannot write Adobe&rsquo;s proprietary <span class="code-cell">.ai</span> format.
+      The generated <strong>SVG</strong> is true vector &mdash; open it in Illustrator and it comes in as editable paths plus real text,
+      then <em>File &rarr; Save As &rarr; Adobe Illustrator (.ai)</em> if that is what your workflow needs.
+      For placing directly into packaging art, the <strong>PDF</strong> is the safer choice because it keeps the exact physical size.
+    </div>
+
+    <div class="hint" id="shareHint">
+      <strong>How to share this tool:</strong>
+      send your colleagues <em>this web address</em> &mdash; nothing to download or install.
+      There is no file to copy around and no second version to keep in sync, so everyone is
+      always on the <strong>same current tool</strong>. Bookmark this page and use it here.
+      <br>
+      Each person uploads the master CSV <strong>once</strong> on their own computer. It is stored
+      in their own browser, not on any server, so everyone's list stays private to them.
+    </div>
+
+    <div class="spec-note" id="privacyNote" style="margin-top:10px">
+      Everything runs inside this browser tab. No master list, item number or UPC is ever uploaded to a server.
+    </div>
+  </section>
+</main>
+
+<footer>
+  Made with love by <a href="https://adrianasoler.com/" target="_blank" rel="noopener">adrianasoler.com</a>
+</footer>
+</div>
+
+<script src="js/barcode.js"></script>
+<script src="js/qrcode.js"></script>
+<script src="js/exporters.js"></script>
+<script src="js/qr-sizing.js"></script>
+<script src="js/app.js"></script>
+<script src="js/qr-batch.js"></script>
+<script src="https://www.genspark.ai/sandbox_inspect.js"></script></body>
+</html>
