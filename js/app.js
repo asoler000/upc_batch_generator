@@ -261,10 +261,25 @@
   }
 
   async function clearSaved() {
-    if (!confirm('Clear the export list?')) return;
+    if (!confirm('Clear the current export list? Your saved Master UPC List will NOT be deleted.')) return;
+
     savedRows = [];
     renderSaved();
-    await dbSet('savedRows', savedRows);
+
+    try {
+      await dbSet('savedRows', savedRows);
+    } catch (err) {
+      console.warn('Could not save cleared export list.', err);
+    }
+
+    setUploadStatus(
+      masterRows.length
+        ? '<strong>Master UPC list still loaded:</strong> ' +
+          masterRows.length.toLocaleString() +
+          ' rows. Paste your next batch of model numbers.'
+        : 'Export list cleared. No master UPC list is currently loaded.',
+      !!masterRows.length
+    );
   }
 
   async function clearPaste() {
@@ -284,15 +299,29 @@
   }
 
   async function clearMaster() {
-    if (!confirm('Delete the saved master list from this browser?')) return;
-    masterRows = []; visibleRows = [];
-    updateCounts();
+    if (!confirm(
+      'DELETE MASTER UPC LIST?\n\n' +
+      'This removes the saved company master list from this browser. ' +
+      'You will need to upload the CSV again.\n\n' +
+      'Your normal Clear Export List button does NOT delete the master.'
+    )) return;
+
+    masterRows = [];
+    visibleRows = [];
     lookupResults = [];
+
+    updateCounts();
     renderLookupResults();
-    await dbDelete('masterRows');
-    await dbDelete('lastUploadDate');
+
+    try {
+      await dbDelete('masterRows');
+      await dbDelete('lastUploadDate');
+    } catch (err) {
+      console.warn('Could not fully delete the saved master list.', err);
+    }
+
     await showWeeklyReminder();
-    setUploadStatus('Master list deleted. Upload a new CSV when ready.');
+    setUploadStatus('Master UPC list deleted. Upload a new master CSV when ready.');
   }
 
   /* =================================================================
@@ -572,7 +601,7 @@
       found + ' found, ' + missing + ' not in the master list';
     if (ambiguous) html += ', ' + ambiguous + ' needing a decision';
     html += '.';
-    if (!found) html += ' Add the master CSV if you have not uploaded it this week.';
+    if (!found && !masterRows.length) html += ' Upload the master CSV to perform lookups.';
     $('lookupStatus').innerHTML = html;
   }
 
@@ -1254,11 +1283,25 @@
 
     try {
       db = await openDB();
-      masterRows = (await dbGet('masterRows')) || [];
-      savedRows = (await dbGet('savedRows')) || [];
+
+      try {
+        masterRows = (await dbGet('masterRows')) || [];
+      } catch (err) {
+        console.warn('Could not restore master UPC list.', err);
+        masterRows = [];
+      }
+
+      try {
+        savedRows = (await dbGet('savedRows')) || [];
+      } catch (err) {
+        console.warn('Could not restore export list.', err);
+        savedRows = [];
+      }
     } catch (err) {
-      console.warn('IndexedDB unavailable, running in-memory only.', err);
-      masterRows = []; savedRows = [];
+      console.warn('IndexedDB unavailable. Data will only persist for this session.', err);
+      db = null;
+      masterRows = [];
+      savedRows = [];
     }
 
     masterRows = masterRows.map(function (row) {
