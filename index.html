@@ -208,7 +208,7 @@ footer a{color:#111;text-decoration:none;font-weight:700}
     <p class="small">
       Upload the Monday master CSV once and it stays inside this browser. Then paste model numbers to
       find their UPCs &mdash; <strong>one model number or a whole column, same box.</strong>
-      Pasted matches are automatically added to the generator below.
+      Paste model numbers and the matching Model / Description / UPC rows appear automatically in the generator below.
     </p>
 
     <div class="row">
@@ -226,30 +226,17 @@ footer a{color:#111;text-decoration:none;font-weight:700}
       <span class="tiny">Paste automatically looks up and stages matches</span>
     </div>
     <div class="row" style="margin-top:10px">
-      <button class="secondary" id="lookupBtn">Refresh Lookup</button>
       <button class="secondary" id="clearPasteBtn">Clear Box</button>
-      <button class="secondary" id="addFoundBtn" disabled>Add All Found to Export List</button>
+      <button id="lookupBtn" type="button" style="display:none">Refresh Lookup</button>
     </div>
 
-    <div class="status" id="lookupStatus">Ready. Type one model number or paste a whole column.</div>
-
-    <div class="table-wrap" id="lookupWrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Model Number (as pasted)</th>
-            <th>Status</th>
-            <th>Item / Model</th>
-            <th>Description</th>
-            <th>GTIN &mdash; Single Pack UPC</th>
-            <th>Add</th>
-          </tr>
-        </thead>
-        <tbody id="lookupBody">
-          <tr><td colspan="6" class="small">Paste model numbers above. Matches appear automatically.</td></tr>
-        </tbody>
-      </table>
+    <!-- Lookup happens automatically; these compatibility elements stay hidden
+         so the existing lookup logic can run without an intermediate results step. -->
+    <div id="lookupStatus" style="display:none"></div>
+    <div id="lookupWrap" style="display:none !important">
+      <table><tbody id="lookupBody"></tbody></table>
     </div>
+    <button id="addFoundBtn" type="button" style="display:none" disabled>Add All Found to Export List</button>
   </section>
 
   <!-- ============ 2. EXPORT LIST + GENERATE ============ -->

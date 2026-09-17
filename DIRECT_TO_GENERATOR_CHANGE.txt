@@ -1,0 +1,8 @@
+Direct-to-generator UI change
+
+- Removed the visible intermediate "Looked up X model numbers" status/results table.
+- Pasting model numbers still automatically looks them up and stages valid matches.
+- The matched Model / Description / UPC rows appear directly in the generator table below.
+- Pressing Enter also runs the lookup/staging action.
+- Shift+Enter can still insert a newline.
+- Barcode/QR generation, master-list persistence, validation, naming, and output settings were not changed.

@@ -286,7 +286,7 @@
     $('pasteInput').value = '';
     lookupResults = [];
     renderLookupResults();
-    $('lookupStatus').textContent = 'Ready. Type one model number or paste a whole column.';
+    $('lookupStatus').textContent = '';
     updatePasteCount();
   }
 
@@ -463,7 +463,9 @@
       $('addFoundBtn').textContent = 'Add All Found to Export List';
       return;
     }
-    wrap.style.display = 'block';
+    /* Intermediate lookup table is intentionally hidden; matches flow directly
+       into the generator/export table below. */
+    wrap.style.display = 'none';
 
     lookupResults.forEach(function (r, idx) {
       var tr = document.createElement('tr');
@@ -1222,9 +1224,9 @@
       }, 0);
     });
     $('pasteInput').addEventListener('keydown', function (event) {
-      /* Ctrl / Cmd + Enter runs the lookup; plain Enter adds a newline so a
-         multi-line paste is never accidentally submitted */
-      if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+      /* Enter sends the current model numbers straight to the generator below.
+         Shift+Enter remains available when the user intentionally wants a newline. */
+      if (event.key === 'Enter' && !event.shiftKey) {
         event.preventDefault();
         lookupPasted();
       }
